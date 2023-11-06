@@ -15,13 +15,11 @@ jobs:
         run: npm install -g @angular/cli
       - name: Current path
         run: echo The current path ${GITHUB_WORKSPACE}
-      - name: Exit Current path
-        run: cd ..
       - name: List diretories
         run: ls -l
       - name: Install dependencies
         run: npm install
-        working-directory: ./pwaangular
+        working-directory: ../pwaangular
       - name: Run coverage
         run: ng test --no-watch --no-progress --browsers=ChromeHeadless
       - name: Run eslint
