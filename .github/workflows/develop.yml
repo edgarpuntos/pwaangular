@@ -4,23 +4,68 @@ on:
     branches:
       - develop
 jobs:
-  Explore-GitHub-Actions:
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    strategy:
+      matrix:
+        include:
+          - TEST_NAME: "Latest v2"
+            AWS_CLI_VERSION: "2"
+        node:
+          - 18
     steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v3"
+        with:
+          ref: ${{ github.ref }}
+      - name: Configure environment name
+        id: env-name
+        env:
+          REPO: ${{ github.repository }}
+        run: >-
+          ENVIRONMENT=`echo $REPO | tr "/" "-"`
+          echo "Environment name: $ENVIRONMENT"
+          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+
       - name: Setup NodeJS
         uses: actions/setup-node@v3
         with:
           node-version: 18
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '${{ matrix.node }}'
+      - name: 'Cache node_modules'
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: >-
+            ${{runner.os}}-node-v${{matrix.node}}-${{hashFiles('**/package.json')}}
+          restore-keys: >-
+            ${{ runner.os }}-node-v${{ matrix.node }}-
       - name: Install angular cli
         run: npm install -g @angular/cli
-      - name: Current path
-        run: echo The current path ${GITHUB_WORKSPACE}
-      - name: List diretories
-        run: ls -l
-      - name: Install dependencies
-        run: npm install
-        working-directory: ../pwaangular
       - name: Run coverage
         run: ng test --no-watch --no-progress --browsers=ChromeHeadless
-      - name: Run eslint
-        run: ng lint
+#  Explore-GitHub-Actions:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Setup NodeJS
+#        uses: actions/setup-node@v3
+#        with:
+#          node-version: 18
+#      - name: Install angular cli
+#        run: npm install -g @angular/cli
+#      - name: Current path
+#        run: echo The current path ${GITHUB_WORKSPACE}
+#      - name: List diretories
+#        run: ls
+#      - name: Install dependencies
+#        run: npm install
+#        working-directory: ../../pwaangular
+#      - name: Run coverage
+#        run: ng test --no-watch --no-progress --browsers=ChromeHeadless
+#      - name: Run eslint
+#        run: ng lint
