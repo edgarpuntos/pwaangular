@@ -13,6 +13,8 @@ jobs:
           node-version: 18
       - name: Install angular cli
         run: npm install -g @angular/cli
+      - name: Current path
+        run: Current path ${GITHUB_WORKSPACE}
       - name: Install dependencies
         run: npm install
       - name: Run coverage
