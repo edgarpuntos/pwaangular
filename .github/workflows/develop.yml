@@ -47,8 +47,12 @@ jobs:
             ${{ runner.os }}-node-v${{ matrix.node }}-
       - name: Install angular cli
         run: npm install -g @angular/cli
+      - name: Install dependencies
+        run: npm install
       - name: Run coverage
         run: ng test --no-watch --no-progress --browsers=ChromeHeadless
+      - name: Run eslint
+        run: ng lint
 #  Explore-GitHub-Actions:
 #    runs-on: ubuntu-latest
 #    steps:
