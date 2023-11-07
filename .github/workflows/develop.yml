@@ -1,8 +1,10 @@
-name: Validate and deploy PWA
+name: Validate PWA ScanTikets
 on: 
-  push:
-    branches:
-      - develop
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - closed
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,7 +15,6 @@ jobs:
       matrix:
         include:
           - TEST_NAME: "Latest v2"
-            AWS_CLI_VERSION: "2"
         node:
           - 18
     steps:
@@ -29,7 +30,6 @@ jobs:
           ENVIRONMENT=`echo $REPO | tr "/" "-"`
           echo "Environment name: $ENVIRONMENT"
           echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
-
       - name: Setup NodeJS
         uses: actions/setup-node@v3
         with:
@@ -49,27 +49,10 @@ jobs:
         run: npm install -g @angular/cli
       - name: Install dependencies
         run: npm install
+        working-directory: ./pwaScanTickets
       - name: Run coverage
         run: ng test --no-watch --no-progress --browsers=ChromeHeadless
+        working-directory: ./pwaScanTickets
       - name: Run eslint
         run: ng lint
-#  Explore-GitHub-Actions:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Setup NodeJS
-#        uses: actions/setup-node@v3
-#        with:
-#          node-version: 18
-#      - name: Install angular cli
-#        run: npm install -g @angular/cli
-#      - name: Current path
-#        run: echo The current path ${GITHUB_WORKSPACE}
-#      - name: List diretories
-#        run: ls
-#      - name: Install dependencies
-#        run: npm install
-#        working-directory: ../../pwaangular
-#      - name: Run coverage
-#        run: ng test --no-watch --no-progress --browsers=ChromeHeadless
-#      - name: Run eslint
-#        run: ng lint
+        working-directory: ./pwaScanTickets
