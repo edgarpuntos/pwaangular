@@ -1,58 +1,58 @@
-name: Validate PWA ScanTikets
+---
+name: Test Branch to merge
 on: 
   pull_request:
+    branches:
+      - develop
     types:
       - opened
       - reopened
-      - closed
 jobs:
-  build:
+  test-angular:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
+      checks: write
     strategy:
       matrix:
-        include:
-          - TEST_NAME: "Latest v2"
-        node:
-          - 18
+        node-version: [ 18.x ]
     steps:
-      - name: "Checkout source code"
-        uses: "actions/checkout@v3"
+      - name: Checkout source code
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
-      - name: Configure environment name
-        id: env-name
-        env:
-          REPO: ${{ github.repository }}
-        run: >-
-          ENVIRONMENT=`echo $REPO | tr "/" "-"`
-          echo "Environment name: $ENVIRONMENT"
-          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
-      - name: Setup NodeJS
+      - name: Setup node ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
-          node-version: 18
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '${{ matrix.node }}'
-      - name: 'Cache node_modules'
-        uses: actions/cache@v2
+          node-version: ${{ matrix.node-version }}
+      - name: Set Cache
+        uses: actions/cache@v3
         with:
           path: ~/.npm
-          key: >-
-            ${{runner.os}}-node-v${{matrix.node}}-${{hashFiles('**/package.json')}}
-          restore-keys: >-
-            ${{ runner.os }}-node-v${{ matrix.node }}-
-      - name: Install angular cli
-        run: npm install -g @angular/cli
-      - name: Install dependencies
-        run: npm install
-        working-directory: ./pwaScanTickets
-      - name: Run coverage
-        run: ng test --no-watch --no-progress --browsers=ChromeHeadless
-        working-directory: ./pwaScanTickets
-      - name: Run eslint
-        run: ng lint
-        working-directory: ./pwaScanTickets
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install Dependencies
+        run: |
+          npm install
+      - name: Run Checkstyle
+        run: |
+          npm run-script lint
+          npm run-script sasslint
+      - name: Publish Checkstyle report
+        uses: Juuxel/publish-checkstyle-report@v1
+        if: ${{ failure() || success() }}
+        with:
+          # required: The glob paths to report XML files as a multiline string
+          # The format below works for the Gradle Checkstyle plugin with default configurations
+          reports: |
+            build/checkstyle/*.xml
+      - name: Coverage
+        run: |
+          npm run-script coverage
+      - name: Validate coverage
+        uses: terencetcf/github-actions-lcov-minimum-coverage-checker@v1
+        with:
+          coverage-file: ./build/coverage/lcov.info
+          minimum-coverage: 90
